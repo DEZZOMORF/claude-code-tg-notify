@@ -26,9 +26,12 @@ Walk the user through configuring `tg-notify`. Follow these steps in order:
    ```
    TELEGRAM_BOT_TOKEN=<token>
    TELEGRAM_CHAT_ID=<chat_id>
+   TELEGRAM_MIN_DURATION_SECONDS=0
    ```
 
-   Create `~/.claude/tg-notify.env` with those two lines, then run `chmod 600 ~/.claude/tg-notify.env` to restrict permissions.
+   `TELEGRAM_MIN_DURATION_SECONDS` is optional — if set, responses faster than this many seconds won't trigger a notification (default `0` = always notify). Ask the user if they want a threshold (e.g. `60` to silence quick replies).
+
+   Create `~/.claude/tg-notify.env` with those lines, then run `chmod 600 ~/.claude/tg-notify.env` to restrict permissions.
 
 6. **Send a test message** by sourcing the config and `curl`ing Telegram directly:
 

@@ -3,7 +3,7 @@
 Telegram notification after every Claude Code response. Works across all sessions via a `Stop` hook. Distributed as a Claude Code plugin — install with two commands, configure with one.
 
 ```
-🔔 Claude finished · my-project · 14:23
+🔔 Claude finished · my-project · 2m 15s
 ```
 
 ## Install
@@ -30,6 +30,7 @@ Claude walks you through creating a bot, getting your chat ID, and writing the c
    ```
    TELEGRAM_BOT_TOKEN=123456789:ABC...
    TELEGRAM_CHAT_ID=987654321
+   TELEGRAM_MIN_DURATION_SECONDS=0
    ```
 5. **Restrict permissions**: `chmod 600 ~/.claude/tg-notify.env`
 
@@ -37,26 +38,29 @@ Next Claude response → Telegram ping.
 
 ## How it works
 
-Ships a single `Stop` hook (runs after every assistant turn) that reads `~/.claude/tg-notify.env` and `curl`s the Telegram Bot API directly. No server, no proxy — your bot, your token, your data.
+Ships two hooks: `UserPromptSubmit` records the start time of each turn to `/tmp/tg-notify-<session>.start`, and `Stop` (after every assistant turn) reads it, computes duration, applies the optional threshold, then `curl`s the Telegram Bot API. No server, no proxy — your bot, your token, your data.
 
 If the env file is missing or incomplete, the hook exits silently. Safe to install and configure later.
 
 ## Message format
 
 ```
-🔔 Claude finished · <cwd-basename> · HH:MM
+🔔 Claude finished · <cwd-basename> · <duration>
 ```
 
-The project name is the basename of the current working directory. Time is local.
+Duration is formatted as `45s`, `2m 15s`, or `1h 23m`. If the start timestamp is missing (e.g. first turn after install), the duration is omitted.
 
 ## Config file format
 
 ```
 TELEGRAM_BOT_TOKEN=<token>
 TELEGRAM_CHAT_ID=<numeric chat id>
+TELEGRAM_MIN_DURATION_SECONDS=<integer, optional>
 ```
 
 No quotes, no spaces around `=`. The file is sourced by Bash, so shell metacharacters in values would be interpreted.
+
+`TELEGRAM_MIN_DURATION_SECONDS` suppresses notifications for responses faster than the given number of seconds (default `0` = always notify). Set to e.g. `60` if you only care about long-running turns.
 
 ## Troubleshooting
 
@@ -76,7 +80,7 @@ The response JSON will tell you what's wrong (common: `"chat not found"` = wrong
 cat ~/.claude/tg-notify.env
 ```
 
-**Too noisy.** The hook fires after every assistant response. If you want to gate by duration or only for specific projects, fork and customize `hooks/notify.sh` — it's 20 lines of shell.
+**Too noisy.** Set `TELEGRAM_MIN_DURATION_SECONDS=60` (or any threshold) in the env file to skip quick responses. For project-specific filtering, fork and customize `hooks/notify.sh`.
 
 ## Uninstall
 

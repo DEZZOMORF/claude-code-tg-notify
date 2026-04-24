@@ -11,6 +11,16 @@
   "license": "MIT",
   "keywords": ["claude-code", "plugin", "telegram", "notifications", "hook"],
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/start.sh"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
