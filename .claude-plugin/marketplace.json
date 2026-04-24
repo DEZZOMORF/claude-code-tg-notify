@@ -1,0 +1,16 @@
+{
+  "name": "dezzomorf",
+  "owner": {
+    "name": "DEZZOMORF"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by DEZZOMORF"
+  },
+  "plugins": [
+    {
+      "name": "tg-notify",
+      "source": "./",
+      "description": "Telegram notification after every Claude Code response"
+    }
+  ]
+}

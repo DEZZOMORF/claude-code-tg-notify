@@ -1,0 +1,25 @@
+{
+  "name": "tg-notify",
+  "version": "0.1.0",
+  "description": "Telegram notification after every Claude Code response",
+  "author": {
+    "name": "DEZZOMORF",
+    "url": "https://github.com/DEZZOMORF"
+  },
+  "homepage": "https://github.com/DEZZOMORF/claude-code-tg-notify",
+  "repository": "https://github.com/DEZZOMORF/claude-code-tg-notify",
+  "license": "MIT",
+  "keywords": ["claude-code", "plugin", "telegram", "notifications", "hook"],
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
