@@ -1,7 +1,7 @@
 {
   "name": "tg-notify",
-  "version": "0.1.0",
-  "description": "Telegram notification after every Claude Code response",
+  "version": "0.2.0",
+  "description": "Telegram notification when Claude Code asks you something or needs permission",
   "author": {
     "name": "DEZZOMORF",
     "url": "https://github.com/DEZZOMORF"
@@ -9,14 +9,32 @@
   "homepage": "https://github.com/DEZZOMORF/claude-code-tg-notify",
   "repository": "https://github.com/DEZZOMORF/claude-code-tg-notify",
   "license": "MIT",
-  "keywords": ["claude-code", "plugin", "telegram", "notifications", "hook"],
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "telegram",
+    "notifications",
+    "hook"
+  ],
   "hooks": {
-    "UserPromptSubmit": [
+    "Notification": [
       {
+        "matcher": "permission_prompt|elicitation_dialog|elicitation_url_dialog|agent_needs_input",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/start.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify.sh notification"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify.sh ask"
           }
         ]
       }
@@ -26,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify.sh stop"
           }
         ]
       }

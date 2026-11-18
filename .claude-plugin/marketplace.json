@@ -10,7 +10,7 @@
     {
       "name": "tg-notify",
       "source": "./",
-      "description": "Telegram notification after every Claude Code response"
+      "description": "Telegram notification when Claude Code asks you something or needs permission"
     }
   ]
 }

@@ -1,62 +1,60 @@
 #!/usr/bin/env bash
-# tg-notify: Claude Code Stop hook -> Telegram
-# Config: ~/.claude/tg-notify.env with TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID,
-#         and optional TELEGRAM_MIN_DURATION_SECONDS (skip if response faster than this)
 
 set -u
 
 CONFIG="${HOME}/.claude/tg-notify.env"
 [ -f "$CONFIG" ] || exit 0
 
-# shellcheck disable=SC1090
 . "$CONFIG"
 
-if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-  exit 0
-fi
+[ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || exit 0
+command -v jq >/dev/null 2>&1 || exit 0
 
-min_duration="${TELEGRAM_MIN_DURATION_SECONDS:-0}"
-
+mode="${1:-}"
 input=$(cat 2>/dev/null || true)
-session_id=$(printf '%s' "$input" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)
+[ -n "$input" ] || exit 0
 
-duration=""
-case "$session_id" in
-  ''|*[!A-Za-z0-9_-]*) : ;;
+cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+project=$(basename "${cwd:-$PWD}")
+
+case "$mode" in
+  notification)
+    message=$(printf '%s' "$input" | jq -r '.message // empty' 2>/dev/null)
+    [ -n "$message" ] || exit 0
+    text="🔐 ${project}
+${message}"
+    ;;
+  ask)
+    body=$(printf '%s' "$input" | jq -r '
+      [.tool_input.questions[]?
+        | "❓ " + .question + "\n"
+          + ([.options[]? | "  • " + .label + (if (.description // "") != "" then " — " + .description else "" end)] | join("\n"))
+      ] | join("\n\n")' 2>/dev/null)
+    [ -n "$body" ] || exit 0
+    text="💬 ${project}
+${body}"
+    ;;
+  stop)
+    last=$(printf '%s' "$input" | jq -r '.last_assistant_message // empty' 2>/dev/null)
+    [ -n "$last" ] || exit 0
+    paragraph=$(printf '%s\n' "$last" | awk '
+      NF { buf = (buf == "" ? $0 : buf "\n" $0); next }
+      buf != "" { last = buf; buf = "" }
+      END { print (buf != "" ? buf : last) }')
+    trimmed=$(printf '%s' "$paragraph" | sed -e 's/[[:space:]*_`]*$//')
+    case "$trimmed" in
+      *\?) ;;
+      *) exit 0 ;;
+    esac
+    text="💬 ${project}
+${paragraph}"
+    ;;
   *)
-    start_file="/tmp/tg-notify-${session_id}.start"
-    if [ -f "$start_file" ]; then
-      start_time=$(cat "$start_file" 2>/dev/null || echo "")
-      rm -f "$start_file"
-      if [ -n "$start_time" ]; then
-        now=$(date +%s)
-        duration=$((now - start_time))
-        if [ "$duration" -lt "$min_duration" ]; then
-          exit 0
-        fi
-      fi
-    fi
+    exit 0
     ;;
 esac
 
-format_duration() {
-  s=$1
-  if [ "$s" -lt 60 ]; then
-    printf '%ds' "$s"
-  elif [ "$s" -lt 3600 ]; then
-    printf '%dm %ds' $((s/60)) $((s%60))
-  else
-    printf '%dh %dm' $((s/3600)) $(((s%3600)/60))
-  fi
-}
-
-project="$(basename "$PWD")"
-if [ -n "$duration" ]; then
-  dur_str=$(format_duration "$duration")
-  text="🔔 Claude finished · ${project} · ${dur_str}"
-else
-  text="🔔 Claude finished · ${project}"
-fi
+text=$(printf '%s' "$text" | jq -Rrs '.[0:3800]')
 
 curl -sS -m 5 \
   -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
