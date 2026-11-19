@@ -8,6 +8,9 @@ CONFIG="${HOME}/.claude/tg-notify.env"
 . "$CONFIG"
 
 [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || exit 0
+if [ -n "${TG_NOTIFY_REQUIRE_ENV:-}" ]; then
+  printenv "$TG_NOTIFY_REQUIRE_ENV" >/dev/null 2>&1 || exit 0
+fi
 command -v jq >/dev/null 2>&1 || exit 0
 
 mode="${1:-}"

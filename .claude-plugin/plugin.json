@@ -1,6 +1,6 @@
 {
   "name": "tg-notify",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Telegram notification when Claude Code asks you something or needs permission",
   "author": {
     "name": "DEZZOMORF",

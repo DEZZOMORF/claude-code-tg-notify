@@ -61,6 +61,14 @@ TELEGRAM_CHAT_ID=<numeric chat id>
 
 No quotes, no spaces around `=`. The file is sourced by Bash, so shell metacharacters in values would be interpreted.
 
+Optional:
+
+```
+TG_NOTIFY_REQUIRE_ENV=TELEGRAM_STATE_DIR
+```
+
+Notify only from sessions whose environment has this variable set. Useful when you run several Claude Code sessions but talk to only one of them from Telegram (for example one started with `TELEGRAM_STATE_DIR=… claude --channels plugin:telegram@claude-plugins-official`): the other sessions stay silent.
+
 ## Troubleshooting
 
 **No message arrives.** Open `https://api.telegram.org/bot<TOKEN>/getMe` in a browser — should return your bot info. If not, the token is wrong or revoked. Then try sending a test manually:
